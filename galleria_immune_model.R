@@ -23,9 +23,9 @@ params <- c(
   MIC = 1, 
   
   # bacteria refugee
-  f = 0*10**-7,#0.0001,
-  b = 0*0.1,
-  K_R = 10**4, # carrying capacity inside refugee
+  f = 1*10**-2,#0.0001,
+  b = 1*0.1,
+  K_R = 10**3, # carrying capacity inside refugee
   
   
   
@@ -40,11 +40,11 @@ params <- c(
   h = 10**-6,
 
   # trying Pilyugin and Antia model kind of stuff
-  h_1 = 0.0001, # killing rate for bacteria 
-  h_2 = 0.01, # rate by which they end up in eganged
-  d = 0.05,# return rate to resting state
-  a = 0.0, #0.001, # background activation rate
-  g = 1000, #handling time = 1/g
+  h_1 = 0.00051, # killing rate for bacteria 
+  h_2 = 0.00014, # rate by which they end up in eganged
+  d = 0.0005,# return rate to resting state
+  a = 0.01, #0.001, # background activation rate
+  g = 0.005, #handling time = 1/g
   s = 0.000035 # per meeting rate/activation rate
 )
 
@@ -82,21 +82,47 @@ sep_handling_pop <- function (t, y, params) {
     dA <- -k*A
     
     # bacteria 
-    dB <- psi(A)*B*(1-B/K) - 1/(1+h*B)*beta*B*E - f*(1-R/K_R)*B + b*R
+    dB <- psi(A)*B*(1-B/K)  - f*(1-R/K_R)*B + b*(1-B/K)*R - beta*B*E #1/(1+h*B)*beta*B*E
     
     # immmune effectors (representative for hemocytes, AMPs, NETs, etc.)    
-    dE <- delta*B*(reservoir-E-H) - 1/(1+h*B)*beta*E*B + (1-gamma)*zeta*H #gamma is the percentage that gets used up during killing?
-    
+    dE <- delta*B*(reservoir-E-H)  + (1-gamma)*zeta*H - beta*E*B#1/(1+h*B)*beta*E*B 
+
     # immmune effectors handling/active (representative for hemocytes, AMPs, NETs, etc.)   
-    dH <- 1/(1+h*B)*beta*E*B - zeta*H # h2 is the engagement rate # g is when they kill smth
+    dH <- - zeta*H + beta*E*B#1/(1+h*B)*beta*E*B# h2 is the engagement rate # g is when they kill smth
     
     # refugee
-    dR <- 1*psi(0)*R*(1-R/K_R) + f*(1-R/K_R)*B - b*R
+    dR <- 1*psi(0)*R*(1-R/K_R) + f*(1-R/K_R)*B - b*(1-B/K)*R
     
     return(list(c(dA, dB, dE, dH, dR)))
     
   })
 }
+
+sep_handling_pop_w_dampening <- function (t, y, params) {
+  
+  with(as.list(c(y, params)), {
+    
+    # antibiotic
+    dA <- -k*A
+    
+    # bacteria 
+    dB <- psi(A)*B*(1-B/K)  - f*(1-R/K_R)*B + b*(1-B/K)*R - 1/(1+h*B)*beta*B*E
+    
+    # immmune effectors (representative for hemocytes, AMPs, NETs, etc.)    
+    dE <- delta*B*(reservoir-E-H)  + (1-gamma)*zeta*H - 1/(1+h*B)*beta*E*B 
+    
+    # immmune effectors handling/active (representative for hemocytes, AMPs, NETs, etc.)   
+    dH <- - zeta*H + 1/(1+h*B)*beta*E*B# h2 is the engagement rate # g is when they kill smth
+    
+    # refugee
+    dR <- 1*psi(0)*R*(1-R/K_R) + f*(1-R/K_R)*B - b*(1-B/K)*R
+    
+    return(list(c(dA, dB, dE, dH, dR)))
+    
+  })
+}
+
+
 
 # model following Pilyugin and Antia with an integrated handling time 
 integrated_handling <- function (t, y, params) {
@@ -107,13 +133,13 @@ integrated_handling <- function (t, y, params) {
       dA <- -k*A
       
       # bacteria 
-      dB <- psi(A)*B*(1-B/K) - h_1*B*E - f*(1-R/K_R)*B + b*R
+      dB <- psi(A)*B*(1-B/K) - h_1*B*E - f*(1-R/K_R)*B + b*(1-B/K)*R
       
       # immmune effectors (handling time included here)
       dE <- (a + s*B)*(reservoir-E-(h_2/g)*E*B) - d*E  #gamma is the percentage that gets used up during killing?
       
       # refugee
-      dR <- 1*psi(0)*R*(1-R/K_R) + f*(1-R/K_R)*B - b*R
+      dR <- 1*psi(0)*R*(1-R/K_R) + f*(1-R/K_R)*B - b*(1-B/K)*R
       
       return(list(c(dA, dB, dE, dR)))
       
@@ -174,7 +200,7 @@ int_inoc_layers <- function(inoculum, ylimit = log10(params[["K"]]), model=integ
     if(i == 1){
       par(mfrow = c(1, 3))
       plot(log10(out$B+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Bacteria", ylab = "pop size (log10)", xlab = "time")
-      plot(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Effectors Free", ylab = "", xlab = "time")
+      plot(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Effectors", ylab = "", xlab = "time")
       plot(log10(out$R+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Refuge", ylab = "", xlab = "time")
     }
     par(mfg = c(1, 1)) # pick which plot is being drawn onto
@@ -196,10 +222,11 @@ params["h"] = 10**-20
 sep_inoc_layers(inoculum = 28000)
 
 
-times <- seq(0, 24, length = 201)
+times <- seq(0, 240, length = 201)
 inocs <- floor(10**seq(1,7,0.5))
 
-
+y["E"] = 1
 int_inoc_layers(inocs)
-
-#sep_inoc_layers((inocs))
+sep_inoc_layers((inocs))
+#params["h"] = 10**-5
+sep_inoc_layers((inocs), model = sep_handling_pop_w_dampening)
