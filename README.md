@@ -1,1 +1,1 @@
-# galleria_immune
+# galleria_immune model
