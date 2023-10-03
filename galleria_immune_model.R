@@ -27,8 +27,6 @@ params <- c(
   b = 1*0.1,
   K_R = 10**3, # carrying capacity inside refugee
   
-  
-  
   # immune system
   BL = 1, # baseline level of immune effectors
   reservoir = 10*10**4, # total number of cells in the body
@@ -213,6 +211,41 @@ int_inoc_layers <- function(inoculum, ylimit = log10(params[["K"]]), model=integ
   parmfrow=c(1,1) # set window management back to default 
 }
 
+
+int_inoc_layers_overlay <- function(inoculum, ylimit = log10(params[["K"]]), model=integrated_handling){
+  
+  colfunc_red <- colorRampPalette(c("blue", "red"))
+  
+  y <- c( 
+    A = params[["Amax"]], # antibiotics
+    B = params[["inoculum"]], # bacteria
+    E = params[["BL"]], # active immune effectors
+    R = 0 )# refugee compartment 
+  
+  for(i in 1:length(inoculum)){
+    y["B"] = inoculum[i]
+    out = ode(times = times, y = y, func = model, parms = params, atol = 10**-8, rtol = 10**-8)
+    out <- data.frame(out)
+    if(i == 1){
+      par(mfrow = c(1, 2))
+      plot(log10(out$B+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Bacteria", ylab = "pop size (log10)", xlab = "time")
+      plot(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Effectors", ylab = "", xlab = "time")
+      #plot(log10(out$R+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim=c(0,ylimit), main = "Refuge", ylab = "", xlab = "time")
+    }
+    par(mfg = c(1, 1)) # pick which plot is being drawn onto
+    points(log10(out$B+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    par(mfg = c(1, 2))
+    points(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    par(mfg = c(1, 1))
+    points(log10(out$R+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, lty = 2)
+  }
+  parmfrow=c(1,1) # set window management back to default 
+}
+
+
+
+
+
 params["BL"] = 10**4
 
 y["E"] = 5688
@@ -223,10 +256,39 @@ sep_inoc_layers(inoculum = 28000)
 
 
 times <- seq(0, 240, length = 201)
-inocs <- floor(10**seq(1,7,0.5))
+inocs <- floor(10**seq(3,3.5,0.5))
 
 y["E"] = 1
 int_inoc_layers(inocs)
 sep_inoc_layers((inocs))
 #params["h"] = 10**-5
 sep_inoc_layers((inocs), model = sep_handling_pop_w_dampening)
+
+
+times <- seq(0, 24, length = 201)
+# trying Pilyugin and Antia model kind of stuff
+params["h_1"] = 0.0004 # killing rate for bacteria 
+params["h_2"] = 0.0001001 # rate by which they end up in enganged
+params["d"] = 0.0001 # return rate to resting state
+params["a"] = 0.01 #0.001, # background activation rate
+params["g"] = 0.0049 #handling time = 1/g
+params["s"] = 0.000035 # per meeting rate/activation rate
+
+
+inocs <- floor(10**seq(2,6,0.25))
+
+params["h_2"] = 0.0001001 # rate by which they end up in eganged
+int_inoc_layers(inocs)
+
+params["h_2"] = 0.000101 # rate by which they end up in eganged
+int_inoc_layers(inocs)
+
+
+
+
+params["h_2"] = 0.0001 # rate by which they end up in eganged
+#params["f"] = 0.0
+#params["b"] = 0.0
+int_inoc_layers(inocs)
+
+
