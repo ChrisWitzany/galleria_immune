@@ -9,9 +9,9 @@ shhh(library(tidyverse))
 library(deSolve)
 library(lhs)        # as the name suggests, needed for lhs generation
 library(KScorrect)  # needed to generate uniform log distributions via the dlunif() function
-library(cowplot)
+shhh(library(cowplot))
 library(tictoc)
-library(patchwork)
+shhh(library(patchwork))
 #--------------------------------------
 
 
@@ -46,7 +46,7 @@ simple_seperate_handling <- function (t, y, params) {
     dP <- psimax*P*(1-P/K_P) + f*(1-P/K_P)*U - b*(1-U/K_U)*P
     
     # debugging
-    if(any(is.na(c(dU, dE, dS, dP)))){ browser() } 
+    #if(any(is.na(c(dU, dE, dS, dP)))){ browser() } 
     
     return(list(c(dU, dE, dS, dP)))
     
@@ -60,9 +60,9 @@ integrated_handling <- function (t, y, params) {
       
       # antibiotic
       dA <- -k*A
-      
+
       # bacteria 
-      dU <- psi(A)*U*(1-U/K_U) - h_1*U*E - f*(1-P/K_P)*U + b*(1-U/K_U)*P
+      dU <- psi(0)*U*(1-U/K_U) - h_1*U*E - f*(1-P/K_P)*U + b*(1-U/K_U)*P
       
       # immune effectors
       dE <- (a + s*U)*(E_tot-E-(h_2/g)*E*U) - d*E 
@@ -70,7 +70,10 @@ integrated_handling <- function (t, y, params) {
       # protected site 
       dP <- 1*psi(0)*P*(1-P/K_P) + f*(1-P/K_P)*U - b*(1-U/K_U)*P
       
+      # debugging
+      #if(any(is.na(c(dA, dU, dE, dP)))){ browser() } 
+      
       return(list(c(dA, dU, dE, dP)))
       
     })
-  }
+}

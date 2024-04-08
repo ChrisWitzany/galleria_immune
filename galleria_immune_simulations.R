@@ -7,33 +7,33 @@
 #----------------------------
 # run and plot multiple dynamics  
 
-int_inoc_layers <- function(inoculum, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y){
+int_inoc_layers <- function(inocs, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y){
   
   tic("for simulating the inoc layers plot")
   
   colfunc_red <- colorRampPalette(c("blue", "red"))
   
-  for(i in 1:length(inoculum)){
+  for(i in 1:length(inocs)){
     
-    y_0["U"] = inoculum[i]
+    y_0["U"] = inocs[i]
     out = ode(times = times, y = y_0, func = model, parms = params, atol = 10**-8, rtol = 10**-8, maxsteps = 10**4)
     out <- data.frame(out)
     
     if(i == 1){
       par(mfrow = c(2, 2))
-      plot(log10(out$U+out$P+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim = c(0, ylimit), main = "Total Bacteria\n(Unprotected + Protected)", ylab = "pop size (log10)", xlab = "time")
-      plot(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim = c(0, ylimit), main = "Effectors", ylab = "", xlab = "time")
-      plot(log10(out$U+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim = c(0, ylimit), main = "Unprotected", ylab = "pop size (log10)", xlab = "time")
-      plot(log10(out$P+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3, ylim = c(0, ylimit), main = "Protected", ylab = "", xlab = "time")
+      plot(log10(out$U+out$P+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3, ylim = c(0, ylimit), main = "Total Bacteria\n(Unprotected + Protected)", ylab = "pop size (log10)", xlab = "time")
+      plot(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3, ylim = c(0, ylimit), main = "Effectors", ylab = "", xlab = "time")
+      plot(log10(out$U+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3, ylim = c(0, ylimit), main = "Unprotected", ylab = "pop size (log10)", xlab = "time")
+      plot(log10(out$P+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3, ylim = c(0, ylimit), main = "Protected", ylab = "", xlab = "time")
     }
     par(mfg = c(1, 1)) # pick which plot is being drawn onto
-    points(log10(out$U+out$P+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    points(log10(out$U+out$P+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3)
     par(mfg = c(1, 2))
-    points(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    points(log10(out$E+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3)
     par(mfg = c(2, 1))
-    points(log10(out$U+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    points(log10(out$U+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3)
     par(mfg = c(2, 2))
-    points(log10(out$P+1)~out$time, type = "l", col = colfunc_red(length(inoculum))[i], lwd = 3)
+    points(log10(out$P+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3)
     
   }
   par(mfrow = c(1, 1)) # set window management back to default 
@@ -44,26 +44,28 @@ int_inoc_layers <- function(inoculum, ylimit = log10(params[["K_U"]]), model=int
 
 #----------------------------------
 # generate inoculum vs end state population sizes data 
-inoc_vs_endstate <- function(inoculum, tspan, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y, params, solver_method = "lsoda"){
+inoc_vs_endstate <- function(inocs, tspan, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y, params, solver_method = "lsoda"){
   
   tic("simulating the inoc vs. endstate ")
   
   df <- data.frame("inoc"=double(), "end"=double()) 
   
-  for(i in 1:length(inoculum)){
+  for(i in 1:length(inocs)){
     
-    y_0["U"] = inoculum[i]
-    out = ode(times = tspan, y = y_0, func = model, parms = params, method = solver_method, maxsteps = 10**5) #, atol = 10**-6, rtol = 10**-6,  
+    y_0["U"] = inocs[i]
+    out = ode(times = tspan, y = y_0, func = model, parms = params, method = solver_method, maxsteps = 10**4) #, atol = 10**-6, rtol = 10**-6,  
     out <- data.frame(out)
     
-    df[i, "inoc"] = inoculum[i]
-    df[i, "end"] = tail(out,1)$P+tail(out,1)$U
+    df[i, "inoc"] = inocs[i]
+    df[i, "end"] = tail(out, 1)$P+tail(out, 1)$U
+    df[i, "time"] = tail(out, 1)$time
     
   }
   
   toc()
   return(df)
 }
+
 
 # a wrapper function to simulate and plot inoculum vs endstate  
 plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solver_method = "lsoda"){
@@ -77,9 +79,9 @@ plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solv
        xlab = "inoculum size (log10)", 
        ylim = c(0, max(log10(data+1)+1, na.rm = T)))
   abline(h=log10(params[["K_U"]]), col = "grey", lwd = 1.5, lty = 2)
-  text(x = 1, y =log10(params[["K_U"]])+0.3, label = expression('K'[U]), col = "grey")
+  text(x = 2, y =log10(params[["K_U"]])+0.4, label = expression('K'[U]), col = "grey")
   abline(h=log10(params[["K_P"]]), col = "grey", lwd = 1.5, lty = 2)
-  text(x = log10(max(inocs))-1, y =log10(params[["K_P"]])+0.3, label = expression('K'[P]), col = "grey", lwd = 2)
+  text(x = log10(max(inocs))-1, y =log10(params[["K_P"]])+0.4, label = expression('K'[P]), col = "grey", lwd = 2)
   points(log10(data$end)~log10(data$inoc), pch = 18)
   points(log10(data$end)~log10(data$inoc), pch = 18, type = "l")
   
@@ -89,6 +91,14 @@ plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solv
 
 # function to generate parameters for sensitivity analysis
 generate_parameters <- function(n_samples, lhs_type = "random"){
+  
+  if(is.matrix(params_space) == FALSE){
+    
+    params_space <- matrix(params_space, ncol = 3, byrow = T)
+    print("params_space automatically turned to matrix")
+    print("double check why it wasnt a matrix from the get go!")
+
+  }
   
   tic("parameter generation:")
   
@@ -161,6 +171,8 @@ sensitivity_analysis <- function(n_samples, inocs = 10**seq(3, 9, 0.25), tspan =
       to_append[ , names(params)] = data.frame(t(params))
       to_append[, "n_sample"] = i
       saving_df = dplyr::bind_rows(saving_df, to_append)  # ...otherwise append to it
+      
+      if(i %% 1001 == 0){cat("\014")} # this clears the console after 10001 iterations - to avoid flooding the console and causing a crash
       
     }
     

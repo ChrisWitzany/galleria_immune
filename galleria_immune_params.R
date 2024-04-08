@@ -17,20 +17,20 @@ params <- c(
   MIC = 1, 
   
   # migration un/protected site
-  K_U = 10**7, # carrying capacity in unprotected site
+  K_U = 10**8, # carrying capacity in unprotected site
   K_P = 1.5*10**3, # carrying capacity inside the protected site
-  f = 1*10**-3,
-  b = 1*0.1,
+  f = 0.001,
+  b = 0.1,
   
   # immune system - Pilyugin and Antia model kind of stuff
-  E_0 = 10**4, # baseline level of immune effectors
+  E_0 = 10**3, # baseline level of immune effectors
   E_tot = 1*10**5, # total number of cells in the body
-  h_1 = 0.0004, # killing rate for bacteria 
-  h_2 = 0.000105, # rate by which they end up in enganged
-  d = 0.0001, # return rate to resting state
+  h_1 = 0.001, # killing rate for bacteria 
+  h_2 = 0.001, # rate by which they end up in enganged
+  d = 0.01, # return rate to resting state
   a = 0.01, # background activation rate
-  g = 0.00049, # handling time = 1/g
-  s = 0.000035 # per meeting rate/activation rate
+  g = 0.5, # handling time = 1/g
+  s = 0.001 # per meeting rate/activation rate
 )
 
 
@@ -49,19 +49,19 @@ params_space <- c(
   MIC_min = 1, MIC_max = 1, MIC_samp = "unif", 
   
   # migration
-  K_U_min = 10**9 , K_U_max = 10**9 , K_U_samp = "log", # carrying capacity in unprotected site
-  K_P_min = 1*10**3, K_P_max = 1*10**3, K_P_samp = "log",
+  K_U_min = 10**8 , K_U_max = 10**8 , K_U_samp = "log", # carrying capacity in unprotected site
+  K_P_min = 1*10**2, K_P_max = 1*10**4, K_P_samp = "log",
   f_min = 1*10**-7, f_max = 1*0.1 , f_samp = "log",
   b_min = 1*10**-7, b_max = 1*0.1 , b_samp = "log",
   
   # immune system
-  E_0_min = 10**4, E_0_max = 10**4, E_0_samp = "log",  # baseline level of immune effectors
-  E_tot_min = 10**6, E_tot_max = 10**6, E_tot_samp = "log", # total number of cells in the body
+  E_0_min = 1, E_0_max = 10**5, E_0_samp = "log",  # baseline level of immune effectors
+  E_tot_min = 10**5, E_tot_max = 10**5, E_tot_samp = "unif", # total number of cells in the body
   h_1_min = 10**-7, h_1_max = 0.1, h_1_samp = "log", # killing rate for bacteria 
   h_2_min = 10**-7, h_2_max = 0.1, h_2_samp = "log", # rate by which they end up in enganged
-  d_min = 10**-7, d_max = 1, d_samp = "log", # return rate to resting state
-  a_min = 10**-7, a_max = 0.5, a_samp = "log", # background activation rate
-  g_min = 10**-7, g_max = 4, g_samp = "log", # handling time = 1/g
+  d_min = 10**-4, d_max = 1, d_samp = "log", # return rate to resting state
+  a_min = 10**-4, a_max = 1, a_samp = "log", # background activation rate
+  g_min = 10**-3, g_max = 4, g_samp = "log", # handling time = 1/g
   s_min = 10**-7, s_max = 0.1, s_samp = "log" # per meeting rate/activation rate
   
 )
