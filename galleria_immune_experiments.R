@@ -18,19 +18,29 @@ times <- seq(0, 24, length = 240)
 
 # figure 1 - example dynamics for different inocula
 png("example_dynamics.png", width = 18, height = 18, unit = "cm", res = 300)
-int_inoc_layers(inocs) # does this function take times?
+fig_1_data_for_brandon <- int_inoc_layers(inocs) # does this function take times?
 dev.off()
+
+# sanity check 
+library(ggplot2)
+ggplot(fig_1_data_for_brandon, aes(x = time, y = log10(P+1), group = inoculum))+
+  geom_line()
+
+# lets loose A for brandon
+fig_1_data_for_brandon$A <- NULL 
+write.csv(fig_1_data_for_brandon, "fig_1_data_for_brandon.csv")
 
 # figure 2 - endstate comparison for different inocula
 png("example_inocs_vs_endstate.png", width = 12, height = 12, unit = "cm", res = 300)
-plot_inoc_vs_endstate(inocs, model = integrated_handling, params = params, y_0 = y, solver_method = "lsoda")
+fig_2_data_for_brandon<- plot_inoc_vs_endstate(inocs, model = integrated_handling, params = params, y_0 = y, solver_method = "lsoda")
 dev.off()
 
-
+fig_2_data_for_brandon$time <- NULL
+write.csv(fig_2_data_for_brandon, "fig_2_data_for_brandon.csv")
 
 #-------
 # make the code below prettier!
-# why is there a inocs nad a inoculum column in the sensitivity output data?
+# why is there an inocs and an inoculum column in the sensitivity output data?
 # make psi(A) bug save by simply setting A to zero at some point? 
 #-------
 
@@ -41,8 +51,12 @@ inocs <- floor(10**seq(1, log10(params[["K_U"]]), 0.5))
 times <- seq(0, 72, length = 201) 
 
 # this will take a while! I run this overnight - set n_samples lower for test runs
-saving_df = sensitivity_analysis(n_samples = 10000, inocs = inocs, tspan = times, model = simple_seperate_handling, solver_method = "lsoda")
-saveRDS(saving_df, file = "sensitivity_results.rds") # save thsi data!
+#saving_df = sensitivity_analysis(n_samples = 10000, inocs = inocs, tspan = times, model = simple_seperate_handling, solver_method = "lsoda")
+#saveRDS(saving_df, file = "sensitivity_results.rds") # save thsi data!
+
+# this will take a while! I run this overnight - set n_samples lower for test runs
+saving_df = sensitivity_analysis(n_samples = 10000, inocs = inocs, tspan = times, model = integrated_handling, solver_method = "lsoda")
+saveRDS(saving_df, file = "sensitivity_results_integrated_handling.rds") # save thsi data!
 
 # it is possible that some simulations terminate early because max step number is reached
 summary(saving_df$time == max(times)) # how often does that happen?
@@ -57,21 +71,41 @@ saving_df <- merge(saving_df, result_agg, by=c("n_sample")) # add count of NAs b
 succ_sims = subset(saving_df, saving_df$maxstep_timeout == FALSE)
 failed_sims = subset(saving_df, saving_df$maxstep_timeout == TRUE)
 
+# making plot pretty
+font_import() # this will take a while! 
+fonts()
+
+library(scales)
+
+# Manually creating labels for x and y axis
+x_breaks <- log10(seq(10, 100000000, by = 10^1))  # adjust by as needed
+x_labels <- sapply(10^x_breaks, function(x) bquote(10^.(log10(x))))
+
+y_breaks <- seq(1,8,1) #log10(seq(10, 100000000, by = 10^1))  # adjust by as needed
+y_labels <- sapply(10^y_breaks, function(x) bquote(10^.(log10(x))))
+
 # plot this!
 sens_visu <- ggplot(succ_sims, aes(x = log10(inoc), y = log10(end), group = n_sample))+
   geom_hline(aes(yintercept = log10(params[["K_U"]])), col = "grey", linetype = "solid", size = 2)+
   geom_line(alpha = 0.01)+
   geom_point(alpha = 0.01)+
-  ylab("population size at endstate (log10)")+
-  xlab("initial inoculum (log10)")+
-  annotate(geom = "text", x = 7, y = log10(params[["K_U"]])+0.4, label = "K[U]", parse = T,size = 7, col = "grey")+
+  ylab("Population size at endstate")+
+  xlab("Initial inoculum")+
+  # setting "nicer" axis labels 
+  scale_y_continuous(breaks = seq(1, 8, 1), 
+                     labels = math_format(10^.x))+
+  scale_x_continuous(breaks = seq(1, 8, 1), 
+                     labels = math_format(10^.x))+
+  annotate(geom = "text", family = "Arial", x = 7, y = log10(params[["K_U"]])+0.4, label = "K[U]", parse = T, size = 7, col = "grey")+
   #ylim(0, 8.5)+
   #xlim(1.5, 8.5)+
-  theme_half_open()
+  theme_half_open()+
+  theme(text = element_text(family = "Arial", size = 12))
 
 sens_visu 
-ggsave("sensitivity_analysis.png", sens_visu, dpi = 300, width=12, unit = "cm", height=12)
+ggsave("sensitivity_analysis_arial.png", sens_visu, dpi = 300, width = 12, unit = "cm", height = 12)
 print("hi")
+
 
 
 
@@ -123,8 +157,9 @@ structure(list(inoculum = 0, Amax = 0, k = 1, psimax = 1, psimin = -5,
                s = 6.82334109156235e-06), row.names = 1335L, class = "data.frame")
 
 
-
+################################################
+################################################
 # TO DO 
 # why is there an inoculum in the readout?
+# remove antibiotics (A)
 
-# this is just a test 

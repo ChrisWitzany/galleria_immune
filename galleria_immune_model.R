@@ -12,6 +12,8 @@ library(KScorrect)  # needed to generate uniform log distributions via the dluni
 shhh(library(cowplot))
 library(tictoc)
 shhh(library(patchwork))
+shhh(library(extrafont))
+
 #--------------------------------------
 
 

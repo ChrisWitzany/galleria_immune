@@ -35,10 +35,20 @@ int_inoc_layers <- function(inocs, ylimit = log10(params[["K_U"]]), model=integr
     par(mfg = c(2, 2))
     points(log10(out$P+1)~out$time, type = "l", col = colfunc_red(length(inocs))[i], lwd = 3)
     
+    # if first run create saving dataframe - otherwise add to it 
+    if(i == 1){
+      out$inoculum <- inocs[i] # add inoculum identifier
+      saving_df <- out # create saving df 
+    }else{
+      out$inoculum <- inocs[i]
+      saving_df <- rbind(saving_df, out)
+    }
   }
   par(mfrow = c(1, 1)) # set window management back to default 
+  
   toc()
-
+  return(saving_df)
+  
 }
 
 
@@ -161,13 +171,13 @@ sensitivity_analysis <- function(n_samples, inocs = 10**seq(3, 9, 0.25), tspan =
     
     if(i == 1){
       
-      saving_df = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = simple_seperate_handling, y_0 = y2, solver_method = solver_method) # if no saving_df create it...
+      saving_df = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = model, y_0 = y, solver_method = solver_method) # if no saving_df create it...
       saving_df[, names(params)] = data.frame(t(params))
       saving_df[, "n_sample"] = i # add an identifier for plotting 
       
     }else{ 
       
-      to_append = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = simple_seperate_handling, y_0 = y2, solver_method = solver_method)
+      to_append = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = model, y_0 = y, solver_method = solver_method)
       to_append[ , names(params)] = data.frame(t(params))
       to_append[, "n_sample"] = i
       saving_df = dplyr::bind_rows(saving_df, to_append)  # ...otherwise append to it
