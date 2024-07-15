@@ -34,4 +34,7 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 sensitivity
-sensitivity_plot_1000_boot.png
+# PNG files
+*.png
+# .rds files
+*.rds

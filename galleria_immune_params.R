@@ -2,19 +2,12 @@
 # GALLERIA IMMUNE PARAMETERS
 #----------------------------
 
+
 params <- c(
   
   inoculum = 10**3, # starting population size of bacteria
   
-  # pharmacokinetics
-  Amax = 0, # antibiotic dose
-  k = 1, # decay/excretion rate of the antibiotic
-  
-  # pharmacodynamics
-  psimax = 1,
-  psimin = -5,
-  kappa = 1.5,
-  MIC = 1, 
+  r = 1, # bacterial growth rate 
   
   # migration un/protected site
   K_U = 10**8, # carrying capacity in unprotected site
@@ -34,19 +27,23 @@ params <- c(
 )
 
 
+# populations vector
+y <- c( 
+  
+  U = params[["inoculum"]], # bacteria
+  E = params[["E_0"]], # active immune effectors
+  P = 0 # protected site 
+  
+)
+
+
+
+
 params_space <- c(
   
   inoculum_min = 0, inoculum_max = 0, inoculum_samp = "unif", # starting population size of bacteria
   
-  # pharamcokinetics
-  Amax_min = 0, Amax_max = 0, A_max_samp = "unif", # antibiotic dose
-  k_min = 1, k_max = 1, k_samp = "unif", # decay/excretion rate of the antibiotic
-  
-  # pharmacodynamics
-  psimax_min = 1, psimax_max = 1, psimax_samp = "unif",
-  psimin_min = -5, psimin_min = -5 , psimin_samp = "unif",
-  kappa_min = 1.5, kappa_max = 1.5 , kappa_samp = "unif",
-  MIC_min = 1, MIC_max = 1, MIC_samp = "unif", 
+  r_min = 1, r_max = 1, r_samp = "unif", # growth rate 
   
   # migration
   K_U_min = 10**8 , K_U_max = 10**8 , K_U_samp = "log", # carrying capacity in unprotected site
@@ -67,6 +64,7 @@ params_space <- c(
 )
 
 
+
 # NOTE THAT THE ORDER MATTERS!
 # hence some sanity checks 
 if(length(params_space)/3 != length(params) || 
@@ -74,28 +72,76 @@ if(length(params_space)/3 != length(params) ||
   stop("params_space and params dont match")
 }
 
+
 params_space <- matrix(params_space, ncol = 3, byrow = T) # easier to index
 if(nrow(params_space) != length(params)){
   stop("something went wrong with the param_space")
 } # another sanity check
 
+# make naming intuitive
+rownames(params_space) = names(params)
 
-# populations vector
-y <- c( 
-  
-  A = params[["Amax"]], # antibiotics
-  U = params[["inoculum"]], # bacteria
-  E = params[["E_0"]], # active immune effectors
-  P = 0 # protected site 
-  
-)
 
-# populations vector
-y2 <- c( 
+# function to create LHS with optimization via a genetic algorithm (better coverage)
+generate_lhs <- function(N, params_to_sample, params){
   
-  U = params[["inoculum"]], # bacteria
-  E = params[["E_0"]], # active immune effectors
-  S = 0, 
-  P = 0 # protected site 
+  k <- length(params_to_sample) # how many parameters?
+  warning("Note that params_to_sample need to make sense with params_space - or unexpected behaviour could happen!")
   
-)
+  print("creating genetic LHS (this might take a while...)")
+  tic("during genetic LHS generation")
+  lhs <- geneticLHS(n = N, # n = row = number of samples 
+                    k = k, # k = column = number of parameters sampled
+                    pop = 50, # how many lhs are generated
+                    gen = 5, # how many generations
+                    pMut = 0.25, # how likely for a row to change/mutate
+                    criterium = "Maximin", # which method for optimizing cooverage
+                    verbose = T # give progress
+  ) 
+  
+  # set names for convenience
+  colnames(lhs) <- params_to_sample
+  
+  # add the non-sampled parameters 
+  # these will be constant over all simulations and given the default values in the scale function
+  constant_params <- names(params)[!rownames(params_space) %in% params_to_sample]
+  
+  lhs <- as.data.frame(lhs)
+  for(n in constant_params){ lhs[, n] <- 1 }
+  lhs <- as.matrix(lhs)
+  
+  toc()
+  
+  return(lhs)
+  
+}
+
+
+# function to transform parameters according to designated param_space 
+scale_lhs <- function(lhs, params_space = params_space){
+  
+  # make sure the order is correct
+  lhs <- lhs[,names(params)]
+  
+  # transform lhs via params_space to actual parameter values
+  for (i in 1:nrow(params_space)){
+    
+    if(params_space[i,3] == "unif"){
+      
+      lhs[,i] <- qunif(lhs[,i], 
+                       min = as.numeric(params_space[i,1]),
+                       max = as.numeric(params_space[i,2])) 
+      
+    } else if(params_space[i,3] == "log"){
+      
+      lhs[,i] <- qlunif(lhs[,i],
+                        min = as.numeric(params_space[i,1]), 
+                        max = as.numeric(params_space[i,2]))
+    }
+  }
+  
+  return(lhs)
+  
+}
+
+

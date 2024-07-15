@@ -1,10 +1,10 @@
-#----------------------------
+#---------------------------------
 # GALLERIA IMMUNE SIMULATIONS
-#----------------------------
+#---------------------------------
 # simulation and plotting functions
 
 
-#----------------------------
+#--------------------------------
 # run and plot multiple dynamics  
 
 int_inoc_layers <- function(inocs, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y){
@@ -37,10 +37,8 @@ int_inoc_layers <- function(inocs, ylimit = log10(params[["K_U"]]), model=integr
     
     # if first run create saving dataframe - otherwise add to it 
     if(i == 1){
-      out$inoculum <- inocs[i] # add inoculum identifier
       saving_df <- out # create saving df 
     }else{
-      out$inoculum <- inocs[i]
       saving_df <- rbind(saving_df, out)
     }
   }
@@ -54,11 +52,11 @@ int_inoc_layers <- function(inocs, ylimit = log10(params[["K_U"]]), model=integr
 
 #----------------------------------
 # generate inoculum vs end state population sizes data 
-inoc_vs_endstate <- function(inocs, tspan, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y, params, solver_method = "lsoda"){
+inoc_vs_endstate <- function(inocs, tspan = times, ylimit = log10(params[["K_U"]]), model=integrated_handling, y_0 = y, params, solver_method = "lsoda"){
   
   tic("simulating the inoc vs. endstate ")
   
-  df <- data.frame("inoc"=double(), "end"=double()) 
+  df <- data.frame("inoc" = double(), "end" = double()) 
   
   for(i in 1:length(inocs)){
     
@@ -99,99 +97,38 @@ plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solv
 }
 
 
-# function to generate parameters for sensitivity analysis
-generate_parameters <- function(n_samples, lhs_type = "random"){
+# a wrapper function that returns only the threshold value when given a set of parameters
+get_threshold <- function(inocs, model, tspan = times, params, y_0, solver_method = "lsoda", cutoff = 1e+07){
   
-  if(is.matrix(params_space) == FALSE){
-    
-    params_space <- matrix(params_space, ncol = 3, byrow = T)
-    print("params_space automatically turned to matrix")
-    print("double check why it wasnt a matrix from the get go!")
+  # building this function
+  data = inoc_vs_endstate(inocs, tspan = tspan, model = model, params = params, y_0 = y_0, solver_method = solver_method)
+  #data = inoc_vs_endstate(inocs, model = integrated_handling, params = params, y_0 = y, solver_method = "lsoda")
+  
+  # check for terminations
+  if(any(data$time < max(data$time))){
+    return("terminated")
+  }
 
+  threshold_inoc <- data%>%
+    mutate(
+            value = end >= cutoff, # total pop over cutoff (default 10**7)
+            fall_below_after = if_else(value, lead(end < cutoff, default = FALSE), FALSE)
+          )%>%  # and correct this if it ever goes down again
+    summarise(
+            first_jump_value = ifelse(any(value), first(inoc[value]), NA_real_), # get first inoculum for which that happens
+            falls_below_after_jump = any(fall_below_after)
+             )
+  
+  if(threshold_inoc$falls_below_after_jump == FALSE){
+    
+    return(threshold_inoc$first_jump_value)
+  
+  }else{
+    
+    return("threshold but drops after")
+  
   }
-  
-  tic("parameter generation:")
-  
-  if(lhs_type == "random"){
-    
-    # quicker for testing:
-    lhs <- randomLHS(n = n_samples,          # n = row = number of samples 
-                     k = length(params))  # k = col =  number of parameters
-    
-  } else if(lhs_type == "genetic"){
-    
-    # generate random parameter set here
-    lhs <- geneticLHS(n = n_samples,          # n = row = number of samples 
-                      k = length(params))  # k = col =  number of parameters
-    
-  }else{ stop("lhs_type has to be random or genetic!")}
-  
-  print("-----------------------")
-  print("generating LHS...")
-  lhs <- matrix(lhs, nrow = nrow(lhs), ncol = ncol(lhs))  # each row will consist of one sample of the parameter space.
-  colnames(lhs) <- names(params) # easier indexing
-  
-  # transform lhs via params_space to actual parameter values
-  for (i in 1:nrow(params_space)){
-    
-    if(params_space[i,3]=="unif"){
-      
-      lhs[,i] <- qunif(lhs[,i], 
-                       min = as.numeric(params_space[i,1]),
-                       max = as.numeric(params_space[i,2])) 
-      
-    } else if(params_space[i,3]=="log"){
-      
-      lhs[,i] <- qlunif(lhs[,i],
-                        min = as.numeric(params_space[i,1]), 
-                        max = as.numeric(params_space[i,2]))
-    }
-  }
-  
-  print("...LHS generated!")
-  
-  toc()
-  
-  return(lhs)
-  
+
 }
 
-# run sensitivity analysis 
-sensitivity_analysis <- function(n_samples, inocs = 10**seq(3, 9, 0.25), tspan = seq(0, 48, length = 201), model = simple_seperate_handling, lhs_type = "random", solver_method = "lsoda"){
-  
-  lhs = generate_parameters(n_samples = n_samples, lhs_type = lhs_type)
-  
-  print("-----------------------")
-  print("running simulations...")
-  tic("all senstitivity simulations:")
-  
-  for(i in 1:n_samples){
-    
-    params = lhs[i, ]   # change params to values in lhs 
-    
-    if(i == 1){
-      
-      saving_df = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = model, y_0 = y, solver_method = solver_method) # if no saving_df create it...
-      saving_df[, names(params)] = data.frame(t(params))
-      saving_df[, "n_sample"] = i # add an identifier for plotting 
-      
-    }else{ 
-      
-      to_append = inoc_vs_endstate(inocs, tspan = tspan, params = params, model = model, y_0 = y, solver_method = solver_method)
-      to_append[ , names(params)] = data.frame(t(params))
-      to_append[, "n_sample"] = i
-      saving_df = dplyr::bind_rows(saving_df, to_append)  # ...otherwise append to it
-      
-      if(i %% 1001 == 0){cat("\014")} # this clears the console after 10001 iterations - to avoid flooding the console and causing a crash
-      
-    }
-    
-  }
-  
-  print("...simulations r done!")
-  print("-----------------------")
-  toc()
-  
-  return(saving_df)
-  
-}
+
