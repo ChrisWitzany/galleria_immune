@@ -76,9 +76,12 @@ inoc_vs_endstate <- function(inocs, tspan = times, ylimit = log10(params[["K_U"]
 
 
 # a wrapper function to simulate and plot inoculum vs endstate  
-plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solver_method = "lsoda"){
+plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solver_method = "lsoda", thres = 10**7){
   
   data = inoc_vs_endstate(inocs, tspan = tspan, model = model, params = params, y_0 = y_0, solver_method = solver_method)
+  
+  thres_val <- data$inoc[which(data$end > thres)[1]]
+  #print(thres_val) # debugging
   
   plot(log10(data$end+1)~log10(data$inoc), 
        type = "l", 
@@ -86,12 +89,14 @@ plot_inoc_vs_endstate <- function(inocs, model, tspan = times, params, y_0, solv
        ylab = "final population size (log10)", 
        xlab = "inoculum size (log10)", 
        ylim = c(0, max(log10(data+1)+1, na.rm = T)))
+  abline(v = log10(thres_val), lty = 2, col = "red", lwd = 2)
   abline(h=log10(params[["K_U"]]), col = "grey", lwd = 1.5, lty = 2)
   text(x = 2, y =log10(params[["K_U"]])+0.4, label = expression('K'[U]), col = "grey")
   abline(h=log10(params[["K_P"]]), col = "grey", lwd = 1.5, lty = 2)
   text(x = log10(max(inocs))-1, y =log10(params[["K_P"]])+0.4, label = expression('K'[P]), col = "grey", lwd = 2)
   points(log10(data$end)~log10(data$inoc), pch = 18)
-  points(log10(data$end)~log10(data$inoc), pch = 18, type = "l")
+  points(x = log10(thres_val), y = log10(data$end[data$inoc==thres_val]), col = "red", lwd = 2, cex = 2)
+  points(log10(data$end)~log10(data$inoc), pch = 18, type = "l", lwd = 2)
   
   return(data)
 }

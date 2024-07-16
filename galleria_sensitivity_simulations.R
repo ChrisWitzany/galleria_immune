@@ -28,11 +28,13 @@ require(SAFER)
 params_to_sample = c("K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
 
 
-# generate and scale lhs
-lhs = generate_lhs(N = 10000, params_to_sample, params)
-scaled_lhs <- scale_lhs(lhs, params_space)
-saveRDS(scaled_lhs, file = "scaled_lhs.rds") # save LHS
+# generate and scale lhs - NOTE this can take a while!
+#lhs = generate_lhs(N = 10000, params_to_sample, params)
+#scaled_lhs <- scale_lhs(lhs, params_space)
+#saveRDS(scaled_lhs, file = "scaled_lhs.rds") # save LHS
 
+# read in already generated LHS
+scaled_lhs <- readRDS("scaled_lhs.rds")
 
 #--------------------------------------
 # # quick visual check whether sampling looks good
