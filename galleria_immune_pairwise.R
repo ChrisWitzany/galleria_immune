@@ -43,13 +43,24 @@ pairwise_simulations <- function(para_1, para_2, by = 0.1, params = params){
   tic("now running simulations for sensitivity analysis...")
   for(i in 1:nrow(pair_params)){
   
-    all_sim_res[i] <- get_threshold(inocs, model = integrated_handling, params = pair_params[i,], y_0 = y, solver_method = "lsoda")
+    result <- get_threshold(inocs, model = integrated_handling, params = pair_params[i,], y_0 = y, solver_method = "lsoda")
   
+    if(!is.na(result) & result == "terminated"){ # switch to stiff solver
+      
+      print("lsoda terminated - trying vode instead:")
+      result <- get_threshold(inocs, model = integrated_handling, params = pair_params[i,], y_0 = y, solver_method = "vode")
+      
+    }
+    
+    all_sim_res[i] <- result
+    
   if(i %% 1001 == 0){cat("\014")} # this clears the console after 10001 iterations - to avoid flooding the console and causing a crash
   
   }
   toc()
 
+  
+  
   # combine simulation results with pair_params
   sim_res <- cbind(as.data.frame(all_sim_res), pair_params)
   
@@ -111,7 +122,7 @@ pairwise_heatmap <- function(sim_res, para_1, para_2, interpolate = F){
 
 #--------------------------------------------------------------
 # run pairwise simulations (NOTE: that this takes a while!)
-#sim_res <- pairwise_simulations(para_1 = "h_1", para_2 = "h_2", by = 0.1, params = params)
+sim_res <- pairwise_simulations(para_1 = "h_1", para_2 = "h_2", by = 0.1, params = params)
 
 # save results
 #saveRDS(sim_res, file = "pairwise_simulation_results.rds")
@@ -121,19 +132,9 @@ pairwise_heatmap <- function(sim_res, para_1, para_2, interpolate = F){
 # read in results
 sim_res <- readRDS("pairwise_simulation_results.rds")
 
-
-# create pairwise plot(s)
-
+# create pairwise plot
 gg_pairwise <- pairwise_heatmap(sim_res = sim_res, para_1 = "h_1", para_2 = "h_2", interpolate = F)
 ggsave("h_1_h_2_pairwise.png", gg_pairwise, height = 9, width = 11, unit = "cm", dpi = 300 )
-
-gg_pairwise_inter <- pairwise_heatmap(sim_res = sim_res, para_1 = "h_1", para_2 = "h_2", interpolate = T)
-ggsave("h_1_h_2_pairwise_inter.png", gg_pairwise_inter, height = 8, width = 10, unit = "cm", dpi = 300 )
-
-gg_pairwise_inter_plus <- gg_pairwise_inter+ 
-                              #geom_raster(interpolate = T)+
-                              scale_y_continuous(limits = c(-7, -1.2),labels = function(x) parse(text = paste0("10^", x)), expand = expand_scale(mult=c(-0.1,-0.1)))
-ggsave("h_1_h_2_pairwise_inter_plus.png", gg_pairwise_inter_plus, height = 8, width = 10, unit = "cm", dpi = 300 )
 
 
 

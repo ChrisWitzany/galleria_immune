@@ -4,8 +4,14 @@
 
 # generate parameters and run simulations
 
+
 #------------------------------------------
 # setup 
+
+source("galleria_immune_params.R")
+source("galleria_immune_model.R")
+source("galleria_immune_simulations.R")
+
 set.seed(42) # for reproducibility
 require(tidyverse)
 require(data.table)
@@ -66,7 +72,16 @@ all_sim_res <- c()
 tic("now running simulations for sensitivity analysis...")
 for(i in 1:nrow(scaled_lhs)){
 
-  all_sim_res[i] <- get_threshold(inocs, model = integrated_handling, params = scaled_lhs[i,], y_0 = y, solver_method = "lsoda")
+  result <- get_threshold(inocs, model = integrated_handling, params = scaled_lhs[i,], y_0 = y, solver_method = "lsoda")
+  
+  if(!is.na(result) & result == "terminated"){ # switch to stiff solver, if terminated but not NA
+    
+    print("lsoda terminated - trying vode instead:")
+    result <- get_threshold(inocs, model = integrated_handling, params = scaled_lhs[i,], y_0 = y, solver_method = "vode")
+    print(result)
+  }
+  
+  all_sim_res[i] <- result
   
   if(i %% 1001 == 0){cat("\014")} # this clears the console after 10001 iterations - to avoid flooding the console and causing a crash
   
@@ -78,7 +93,7 @@ all_sim_res <- as.data.frame(all_sim_res)
 sim_res_w_paras <- cbind(all_sim_res, scaled_lhs)
 
 # save results
-saveRDS(sim_res_w_paras, file = "simulation_results.rds") 
+#saveRDS(sim_res_w_paras, file = "simulation_results_new.rds") 
 
 
 

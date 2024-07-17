@@ -23,7 +23,7 @@ require(SAFER)
 
 #--------------------------------------
 # read in the simulation results
-sim_res_w_paras <- readRDS("simulation_results.rds")
+sim_res_w_paras <- readRDS("simulation_results_new.rds")
 
 # which parameters were sampled? (see sensitivity_simulations file)
 params_to_sample = c("K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
@@ -41,7 +41,7 @@ Y <- as.matrix((sim_res_w_paras2$all_sim_res))
 
 #----------------------------------------------
 # PAWN parameters, and plotting
-n <- 20 # number of conditioning intervals 
+n <- 10 # number of conditioning intervals 
 N <- nrow(Y) # number of samples - rule of thumb: N/n>80 
 NN <- seq(N/(N/100*2), N, by = N/(N/100*2)) # subsample size for convergence - Note: NN - floor(NN) < 10^-6 needs to be met!
 Nboot <- 10000 # bootstraps for CIs
@@ -125,7 +125,7 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
 gg_pawn_indices <- boxplot1_dummy_touchup(mu = KS_max_d_m, lb = KS_max_d_lb, ub = KS_max_d_ub, prnam = x_labels)
 gg_pawn_indices
 #save this one
-ggsave("pawn_sensitivity_n20_boot10000_2.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
+ggsave("pawn_sensitivity.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
 
 
 
