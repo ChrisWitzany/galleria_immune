@@ -40,6 +40,6 @@ sensitivity
 # .rds files
 *.rds
 *.csv
-
 convergence_plot_n20_nboot10000.jpeg
 inocs_vs_endstate_fig_data.csv
+old_figures
