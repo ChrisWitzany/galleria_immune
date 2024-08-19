@@ -121,7 +121,7 @@ generate_lhs <- function(N, params_to_sample, params){
 scale_lhs <- function(lhs, params_space = params_space){
   
   # make sure the order is correct
-  lhs <- lhs[,names(params)]
+  lhs <- lhs[, names(params)]
   
   # transform lhs via params_space to actual parameter values
   for (i in 1:nrow(params_space)){

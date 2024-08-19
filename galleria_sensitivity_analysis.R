@@ -1,9 +1,9 @@
-#--------------------------------------
+#-------------------------------------------
 # GALLERIA IMMUNE SENSITIVITY ANALYSIS
-#--------------------------------------
+#-------------------------------------------
 # identify which parameters are influential
 
-#--------------------------------------
+#-------------------------------------------
 # setup 
 set.seed(42) # for reproducibility
 require(tidyverse)
@@ -33,6 +33,7 @@ summary(as.factor(sim_res_w_paras$all_sim_res))
 sim_res_w_paras2 <- subset(sim_res_w_paras, !is.na(sim_res_w_paras$all_sim_res) & !sim_res_w_paras$all_sim_res  == "terminated" & !sim_res_w_paras$all_sim_res  == "threshold but drops after" )
 sim_res_w_paras2$all_sim_res <- as.numeric(sim_res_w_paras2$all_sim_res)
 
+
 #----------------------------------------------
 # set up model parameters (X) and output (Y)
 X <- as.matrix(sim_res_w_paras2[,params_to_sample])
@@ -49,6 +50,7 @@ alfa <- 0.05 # significance level for CIs estimated by bootstrapping
 x_labels <- params_to_sample # for plotting
 x_labels_dummy <- c(params_to_sample, "dummy")
 
+
 #----------------------------------------------
 # generate and plot cdf
 pawn_cdf <- pawn_plot_CDF(log10(X), log10(Y), n = n, n_col = 3, y_label = "threshold", labelinput = x_labels)
@@ -58,7 +60,6 @@ pawn_ks <- pawn_plot_ks(pawn_cdf$YF, pawn_cdf$FU, pawn_cdf$FC, pawn_cdf$xc, n_co
 
 #----------------------------------------------
 # calc PAWN indexes with CIs, and bootstrapping
-
 # identification of influential and non-influential inputs
 # only KS_max for screening purposes (as recommended) 
 
@@ -93,16 +94,13 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
   mu1 <- mu[1:(length(mu)-1)]
   lb1 <- lb[1:(length(lb)-1)]
   ub1 <- ub[1:(length(ub)-1)]
-  mu2 <- tail(mu,n=1) 
-  lb2 <- tail(lb,n=1)
-  ub2 <- tail(ub,n=1)
+  mu2 <- tail(mu, n=1) 
+  lb2 <- tail(lb, n=1)
+  ub2 <- tail(ub, n=1)
   
   dat <- data.frame(x = factor(prnam, levels = prnam ), mu = mu1)
   
   .pl <- ggplot(data = dat, mapping = aes(x = reorder(x,-mu1), y = mu1, color = reorder(x,-mu1)))+ # added reorder to plot by decreasing mu1
-            #geom_point(size = 5) + 
-            #geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = lb2, ymax = ub2), 
-            #  fill = "grey49", alpha = 0.01)+ # semitransparent segment
             geom_col(fill = NA, size = 1.3, width = 0.8)+ # changed to barplot
             scale_color_brewer(palette = "Set1")+# nicer colors
             geom_errorbar(mapping = aes(ymin = lb1, ymax = ub1), size = 0.5, width = 0.5, color = "black")+ # draw errors on top
@@ -112,8 +110,6 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
             geom_hline(yintercept=mu2, linewidth = 0.5, color = "grey49") +
             geom_hline(yintercept=lb2, linewidth = 0.5, linetype = "dashed", color = "grey49") +
             geom_hline(yintercept=ub2, linewidth = 0.5, linetype = "dashed", color = "grey49") +
-            #annotate("text", x = length(dat$x)/2, y = 0, label = "threshold for non-influential input factors",
-            #size = 20/.pt, color = "grey49")+
             theme_classic()+
             theme(legend.position = "none", 
                   text = element_text(size = 12))
@@ -124,8 +120,8 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
 
 gg_pawn_indices <- boxplot1_dummy_touchup(mu = KS_max_d_m, lb = KS_max_d_lb, ub = KS_max_d_ub, prnam = x_labels)
 gg_pawn_indices
-#save this one
-ggsave("pawn_sensitivity.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
+# save this one
+#ggsave("pawn_sensitivity.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
 
 
 

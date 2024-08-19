@@ -1,7 +1,12 @@
 #------------------------------------------------
-# GALLERIA IMMUNE PAIR-WISE PARAMETER VARIATION 
+# GALLERIA IMMUNE PAIRWISE PARAMETER VARIATION 
 #------------------------------------------------
-# (i.e. two parameters are varied all others stay the same)
+# (i.e. two parameters are varied, all others stay the same)
+
+# setup:
+source("galleria_immune_params.R")
+source("galleria_immune_model.R")
+source("galleria_immune_simulations.R")
 
 require(zoo)
 require(viridisLite)
@@ -59,8 +64,6 @@ pairwise_simulations <- function(para_1, para_2, by = 0.1, params = params){
   }
   toc()
 
-  
-  
   # combine simulation results with pair_params
   sim_res <- cbind(as.data.frame(all_sim_res), pair_params)
   
@@ -70,7 +73,7 @@ pairwise_simulations <- function(para_1, para_2, by = 0.1, params = params){
 
 
 # function for plotting a nice looking heatmap
-pairwise_heatmap <- function(sim_res, para_1, para_2, interpolate = F){
+pairwise_heatmap <- function(sim_res, para_1, para_2){
   
   # some data prepping
   sim_res$res <- ifelse(is.na(sim_res$all_sim_res), 
@@ -78,12 +81,6 @@ pairwise_heatmap <- function(sim_res, para_1, para_2, interpolate = F){
                         sim_res$all_sim_res)
   
   sim_res$res <- round(log10(as.numeric(sim_res$res)), 2)
-  
-  if(interpolate){
-    warning("this plot function interpolates! (i.e uses last value instead of NA)")
-    sim_res <- sim_res[order(-sim_res[,para_1], +sim_res[,para_2]), ]
-    sim_res$res <- na.locf(sim_res$res, na.rm = F, fromLast = T)
-  }
   
   # create nice looking plot
   gg_pairwise <- ggplot(sim_res, aes(log10(h_1), log10(h_2), fill = (res)))+ 
@@ -122,7 +119,7 @@ pairwise_heatmap <- function(sim_res, para_1, para_2, interpolate = F){
 
 #--------------------------------------------------------------
 # run pairwise simulations (NOTE: that this takes a while!)
-sim_res <- pairwise_simulations(para_1 = "h_1", para_2 = "h_2", by = 0.1, params = params)
+#sim_res <- pairwise_simulations(para_1 = "h_1", para_2 = "h_2", by = 0.1, params = params)
 
 # save results
 #saveRDS(sim_res, file = "pairwise_simulation_results.rds")
@@ -130,11 +127,11 @@ sim_res <- pairwise_simulations(para_1 = "h_1", para_2 = "h_2", by = 0.1, params
 
 #-------------------------------------------------------------
 # read in results
-sim_res <- readRDS("pairwise_simulation_results.rds")
+#sim_res <- readRDS("pairwise_simulation_results.rds")
 
 # create pairwise plot
-gg_pairwise <- pairwise_heatmap(sim_res = sim_res, para_1 = "h_1", para_2 = "h_2", interpolate = F)
-ggsave("h_1_h_2_pairwise.png", gg_pairwise, height = 9, width = 11, unit = "cm", dpi = 300 )
+#gg_pairwise <- pairwise_heatmap(sim_res = sim_res, para_1 = "h_1", para_2 = "h_2")
+#ggsave("h_1_h_2_pairwise.png", gg_pairwise, height = 9, width = 11, unit = "cm", dpi = 300 )
 
 
 

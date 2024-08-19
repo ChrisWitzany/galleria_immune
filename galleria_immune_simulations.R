@@ -107,8 +107,7 @@ get_threshold <- function(inocs, model, tspan = times, params, y_0, solver_metho
   
   # building this function
   data = inoc_vs_endstate(inocs, tspan = tspan, model = model, params = params, y_0 = y_0, solver_method = solver_method)
-  #data = inoc_vs_endstate(inocs, model = integrated_handling, params = params, y_0 = y, solver_method = "lsoda")
-  
+
   # check for terminations
   if(any(data$time < max(data$time))){
     return("terminated")
