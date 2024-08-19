@@ -33,6 +33,6 @@ docs/
 po/*~
 # RStudio Connect folder
 rsconnect/
-
 # custom
+.DS_Store
 figures_and_data
