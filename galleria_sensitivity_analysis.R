@@ -121,8 +121,10 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
 
 gg_pawn_indices <- boxplot1_dummy_touchup(mu = KS_max_d_m, lb = KS_max_d_lb, ub = KS_max_d_ub, prnam = x_labels)
 gg_pawn_indices
+
 # save this one
-ggsave("pawn_sensitivity_revision.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
+ggsave("pawn_sensitivity_revision.pdf", gg_pawn_indices, device = cairo_pdf, height = 12, width = 12, unit = "cm")
+ggsave("pawn_sensitivity_revision.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 450)
 
 
 
