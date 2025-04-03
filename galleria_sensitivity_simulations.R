@@ -31,16 +31,16 @@ require(SAFER)
 #--------------------------------------
 # which parameters should be sampled?
 # (dont just sample them all; this would be computationally expensive)
-params_to_sample = c("K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
+params_to_sample = c("E_tot","K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
 
 
 # generate and scale lhs - NOTE this can take a while!
-#lhs = generate_lhs(N = 10000, params_to_sample, params)
-#scaled_lhs <- scale_lhs(lhs, params_space)
-#saveRDS(scaled_lhs, file = "scaled_lhs.rds") # save LHS
+lhs = generate_lhs(N = 10000, params_to_sample, params)
+scaled_lhs <- scale_lhs(lhs, params_space)
+saveRDS(scaled_lhs, file = "scaled_lhs.rds") # save LHS
 
 # read in already generated LHS
-scaled_lhs <- readRDS("scaled_lhs.rds")
+scaled_lhs <- readRDS("scaled_lhs_revision.rds")
 
 #--------------------------------------
 # # quick visual check whether sampling looks good
@@ -93,7 +93,7 @@ all_sim_res <- as.data.frame(all_sim_res)
 sim_res_w_paras <- cbind(all_sim_res, scaled_lhs)
 
 # save results
-#saveRDS(sim_res_w_paras, file = "simulation_results_new.rds") 
+saveRDS(sim_res_w_paras, file = "simulation_results_revision.rds") 
 
 
 

@@ -53,7 +53,7 @@ params_space <- c(
   
   # immune system
   E_0_min = 1, E_0_max = 10**5, E_0_samp = "log",  # baseline level of immune effectors
-  E_tot_min = 10**5, E_tot_max = 10**5, E_tot_samp = "unif", # total number of cells in the body
+  E_tot_min = 1*10**4.5, E_tot_max = 1*10**5.3, E_tot_samp = "log", # total number of cells in the body
   h_1_min = 10**-7, h_1_max = 0.1, h_1_samp = "log", # killing rate for bacteria 
   h_2_min = 10**-7, h_2_max = 0.1, h_2_samp = "log", # rate by which they end up in enganged
   d_min = 10**-4, d_max = 1, d_samp = "log", # return rate to resting state

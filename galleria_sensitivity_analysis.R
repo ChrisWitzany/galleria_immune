@@ -23,10 +23,10 @@ require(SAFER)
 
 #--------------------------------------
 # read in the simulation results
-sim_res_w_paras <- readRDS("simulation_results_new.rds")
+sim_res_w_paras <- readRDS("simulation_results_revision.rds")
 
 # which parameters were sampled? (see sensitivity_simulations file)
-params_to_sample = c("K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
+params_to_sample = c("E_tot","K_P", "f", "b", "h_1", "h_2", "d", "a", "g", "s") 
 
 # subset only found thresholds, i.e., no NAs or "termination"s or "threshold but drops after"
 summary(as.factor(sim_res_w_paras$all_sim_res))
@@ -102,7 +102,8 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
   
   .pl <- ggplot(data = dat, mapping = aes(x = reorder(x,-mu1), y = mu1, color = reorder(x,-mu1)))+ # added reorder to plot by decreasing mu1
             geom_col(fill = NA, size = 1.3, width = 0.8)+ # changed to barplot
-            scale_color_brewer(palette = "Set1")+# nicer colors
+            #scale_color_brewer(palette = "Paired")+# nicer colors
+            scale_color_manual(values = sample(brewer.pal(12, "Paired")[-c(4, 11)]))+
             geom_errorbar(mapping = aes(ymin = lb1, ymax = ub1), size = 0.5, width = 0.5, color = "black")+ # draw errors on top
             xlab(NULL)+ 
             ylab("PAWN sensitivity index")+
@@ -121,7 +122,7 @@ boxplot1_dummy_touchup <- function(mu, lb = NULL, ub = NULL, prnam = NULL){
 gg_pawn_indices <- boxplot1_dummy_touchup(mu = KS_max_d_m, lb = KS_max_d_lb, ub = KS_max_d_ub, prnam = x_labels)
 gg_pawn_indices
 # save this one
-#ggsave("pawn_sensitivity.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
+ggsave("pawn_sensitivity_revision.png", gg_pawn_indices, height = 12, width = 12, unit = "cm", dpi = 300 )
 
 
 

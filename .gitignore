@@ -36,3 +36,12 @@ rsconnect/
 # custom
 .DS_Store
 figures_and_data
+pawn_sensitivity_revision.pdf
+pawn_sensitivity_revision.png
+pawn_sensitivity_revision_10dec.png
+pawn_sensitivity_revision_colors_fixed.png
+scaled_lhs.rds
+scaled_lhs_revision.rds
+simulation_results_new_revision.rds
+simulation_results_old.rds
+simulation_results_revision.rds
